@@ -1,0 +1,27 @@
+specVersion: 0.0.2
+schema:
+  file: ./schema.graphql
+dataSources:
+  - name: Margin
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: SoloMargin
+      address: '0x1e0447b19bb6ecfdae1e4ae1694b0c3659614e4e'
+      startBlock: 7575711
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/protocol/margin.ts
+      abis:
+        - name: SoloMargin
+          file: ./abis/SoloMargin.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+      entities:
+        - Market
+        - Token
+      eventHandlers:
+        - event: LogAddMarket(uint256,address)
+          handler: handleLogAddMarket

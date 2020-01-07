@@ -1,0 +1,35 @@
+type Market @entity {
+  " Unique ID for a market "
+  id: ID!
+
+  " Token associated to this market "
+  token: Token!
+
+  " Creation timestamp in seconds "
+  created: BigInt!
+
+  " Block number in which the market was created "
+  createdAtBlock: BigInt!
+
+  " Transaction hash in which the market was created "
+  createdAtTransaction: Bytes!
+}
+
+type Token @entity {
+  id: ID!
+
+  " Token address "
+  address: Bytes!
+
+  " Number of decimals the token uses "
+  decimals: Int!
+
+  " Human-readable name of the token "
+  name: String
+
+  " Symbol of the token "
+  symbol: String
+
+  " Associated market "
+  market: Market!
+}
