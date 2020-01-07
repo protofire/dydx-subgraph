@@ -25,3 +25,45 @@ dataSources:
       eventHandlers:
         - event: LogAddMarket(uint256,address)
           handler: handleLogAddMarket
+  - name: SaiPriceOracle
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: DaiPriceOracle
+      address: '0x787f552bdc17332c98aa360748884513e3cb401a'
+      startBlock: 7575713
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/external/oracles/sai-price.ts
+      abis:
+        - name: DaiPriceOracle
+          file: ./abis/DaiPriceOracle.json
+      entities:
+        - PriceLog
+        - Token
+      eventHandlers:
+        - event: PriceSet((uint128,uint32))
+          handler: handlePriceSet
+  - name: DaiPriceOracle
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: DaiPriceOracle
+      address: '0xccfcf083335633c48e99872899586113a2bd08d8'
+      startBlock: 8977334
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/external/oracles/dai-price.ts
+      abis:
+        - name: DaiPriceOracle
+          file: ./abis/DaiPriceOracle.json
+      entities:
+        - PriceLog
+        - Token
+      eventHandlers:
+        - event: PriceSet((uint128,uint32))
+          handler: handlePriceSet

@@ -16,6 +16,7 @@ type Market @entity {
 }
 
 type Token @entity {
+  " Token address "
   id: ID!
 
   " Token address "
@@ -32,4 +33,21 @@ type Token @entity {
 
   " Associated market "
   market: Market!
+
+  " Current price "
+  price: PriceLog
+}
+
+type PriceLog @entity {
+  " Equals to:  <tokenAddress>-<timestamp>"
+  id: ID!
+
+  " Asset reference "
+  asset: Token!
+
+  " Asset price "
+  value: BigDecimal!
+
+  " Timestamp in seconds "
+  timestamp: BigInt!
 }
