@@ -36,5 +36,12 @@ function registerToken(tokenAddress: Address): Token {
   token.name = !tokenName.reverted ? tokenName.value : null
   token.symbol = !tokenSymbol.reverted ? tokenSymbol.value : null
 
+  // Handle Single-Collateral Dai manually since isn't a detailed token
+  if (token.address.toHexString() == '0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359') {
+    token.decimals = 18
+    token.name = 'Sai Stablecoin v1.0'
+    token.symbol = 'SAI'
+  }
+
   return token
 }
