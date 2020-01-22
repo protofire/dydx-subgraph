@@ -13,6 +13,34 @@ type Market @entity {
 
   " Transaction hash in which the market was created "
   createdAtTransaction: Bytes!
+
+  " Current market state "
+  state: MarketState
+
+  " Timestamp of last interest index update "
+  lastIndexUpdate: BigInt
+}
+
+type MarketState @entity {
+  id: ID!
+
+  " Market reference "
+  market: Market!
+
+  " The amount borrowed vs the amount lent "
+  utilization: BigDecimal!
+
+  " Current interest rate for borrowers "
+  borrowerInterestRate: BigDecimal!
+
+  " Current interest rate for lenders "
+  lenderInterestRate: BigDecimal!
+
+  " Current interest rate for traders "
+  traderInterestRate: BigDecimal!
+
+  " Timestamp in seconds "
+  timestamp: BigInt!
 }
 
 type Token @entity {
@@ -35,19 +63,22 @@ type Token @entity {
   market: Market!
 
   " Current price "
-  price: PriceLog
+  price: TokenPrice
 }
 
-type PriceLog @entity {
+type TokenPrice @entity {
   " Equals to:  <tokenAddress>-<timestamp>"
   id: ID!
 
-  " Asset reference "
-  asset: Token!
+  " Token reference "
+  token: Token!
 
   " Asset price "
   value: BigDecimal!
 
   " Timestamp in seconds "
   timestamp: BigInt!
+
+  " Block number "
+  block: BigInt!
 }

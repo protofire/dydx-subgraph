@@ -24,7 +24,9 @@ dataSources:
         - Token
       eventHandlers:
         - event: LogAddMarket(uint256,address)
-          handler: handleLogAddMarket
+          handler: handleAddMarket
+        - event: LogIndexUpdate(indexed uint256,(uint96,uint96,uint32))
+          handler: handleIndexUpdate
   - name: SaiPriceOracle
     kind: ethereum/contract
     network: mainnet
@@ -36,7 +38,7 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.3
       language: wasm/assemblyscript
-      file: ./src/external/oracles/sai-price.ts
+      file: ./src/oracles/sai-price.ts
       abis:
         - name: DaiPriceOracle
           file: ./abis/DaiPriceOracle.json
@@ -57,7 +59,7 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.3
       language: wasm/assemblyscript
-      file: ./src/external/oracles/dai-price.ts
+      file: ./src/oracles/dai-price.ts
       abis:
         - name: DaiPriceOracle
           file: ./abis/DaiPriceOracle.json

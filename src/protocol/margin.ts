@@ -1,13 +1,15 @@
-import { Address } from '@graphprotocol/graph-ts'
+import { Address, BigDecimal } from '@graphprotocol/graph-ts'
 
-import { LogAddMarket } from '../../generated/Margin/SoloMargin'
+import { SoloMargin, LogAddMarket, LogIndexUpdate } from '../../generated/Margin/SoloMargin'
 import { ERC20 } from '../../generated/Margin/ERC20'
 
-import { Market, Token } from '../../generated/schema'
+import { Market, MarketState, Token, TokenPrice } from '../../generated/schema'
+import { pow, toDecimal } from '../utils/numeric'
 
-const DEFAULT_TOKEN_DECIMALS = 18
+const DEFAULT_DECIMALS = 18
+const NETWORK_EARNINGS_RATE = 0.95 // TODO: Get this value from the SoloMargin contract
 
-export function handleLogAddMarket(event: LogAddMarket): void {
+export function handleAddMarket(event: LogAddMarket): void {
   let token = registerToken(event.params.token)
 
   let market = new Market(event.params.marketId.toString())
@@ -18,9 +20,90 @@ export function handleLogAddMarket(event: LogAddMarket): void {
   market.createdAtTransaction = event.transaction.hash
 
   token.market = market.id
+  token.save()
 
   market.save()
-  token.save()
+}
+
+export function handleIndexUpdate(event: LogIndexUpdate): void {
+  let market = Market.load(event.params.market.toString())
+
+  if (market != null) {
+    let token = Token.load(market.token)
+
+    if (token != null) {
+      let solo = SoloMargin.bind(event.address)
+
+      // Update token price
+      let currentTokenPrice = TokenPrice.load(token.price)
+
+      let newPrice = toDecimal(solo.getMarketPrice(event.params.market).value, token.decimals)
+
+      if (currentTokenPrice == null) {
+        let newTokenPrice = new TokenPrice(token.id + '-' + event.block.timestamp.toString())
+        newTokenPrice.token = token.id
+        newTokenPrice.value = newPrice
+        newTokenPrice.block = event.block.number
+        newTokenPrice.timestamp = event.block.timestamp
+
+        token.price = newTokenPrice.id
+
+        newTokenPrice.save()
+        token.save()
+      }
+
+      if (currentTokenPrice != null) {
+        let currentPrice = currentTokenPrice.value
+
+        if (currentPrice != newPrice) {
+          let newTokenPrice = new TokenPrice(token.id + '-' + event.block.timestamp.toString())
+          newTokenPrice.token = token.id
+          newTokenPrice.value = newPrice
+          newTokenPrice.block = event.block.number
+          newTokenPrice.timestamp = event.block.timestamp
+
+          token.price = newTokenPrice.id
+
+          newTokenPrice.save()
+          token.save()
+        }
+      }
+
+      // Save new market state
+      let newMarketState = new MarketState(market.id + '-' + event.block.timestamp.toString())
+      newMarketState.market = market.id
+      newMarketState.timestamp = event.block.timestamp
+
+      // Update total par for this market
+      let totalPar = solo.getMarketTotalPar(event.params.market)
+
+      // Update interest rates. See: https://help.dydx.exchange/en/articles/2924246-how-do-interest-rates-work
+      newMarketState.utilization = totalPar.supply.isZero()
+        ? totalPar.supply.toBigDecimal()
+        : totalPar.borrow.div(totalPar.supply).toBigDecimal()
+
+      // If the utilization is X, then the borrow interest is calculated as: (0.04 * X) + (0.11 * X^32) + (0.35 * X^64)
+      newMarketState.borrowerInterestRate = BigDecimal.fromString('0.04')
+        .times(newMarketState.utilization)
+        .plus(BigDecimal.fromString('0.11').times(pow(newMarketState.utilization, 32)))
+        .plus(BigDecimal.fromString('0.35').times(pow(newMarketState.utilization, 64)))
+
+      // if the borrow interest rate is B, then the lender interest is calculated as: 95% * (B * X)
+      newMarketState.lenderInterestRate = newMarketState.borrowerInterestRate
+        .times(newMarketState.utilization)
+        .times(BigDecimal.fromString(NETWORK_EARNINGS_RATE.toString()))
+
+      // TODO: Trading interest rate
+      newMarketState.traderInterestRate = BigDecimal.fromString('0')
+
+      newMarketState.save()
+
+      market.state = newMarketState.id
+      market.lastIndexUpdate = event.params.index.lastUpdate
+
+      market.save()
+    }
+  }
 }
 
 function registerToken(tokenAddress: Address): Token {
@@ -32,7 +115,7 @@ function registerToken(tokenAddress: Address): Token {
 
   let token = new Token(tokenAddress.toHexString())
   token.address = tokenAddress
-  token.decimals = !tokenDecimals.reverted ? tokenDecimals.value : DEFAULT_TOKEN_DECIMALS
+  token.decimals = !tokenDecimals.reverted ? tokenDecimals.value : DEFAULT_DECIMALS
   token.name = !tokenName.reverted ? tokenName.value : null
   token.symbol = !tokenSymbol.reverted ? tokenSymbol.value : null
 
