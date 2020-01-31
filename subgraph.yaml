@@ -21,12 +21,43 @@ dataSources:
           file: ./abis/ERC20.json
       entities:
         - Market
+        - MarketState
         - Token
+        - TokenPrice
+        - LongPosition
+        - ShortPosition
       eventHandlers:
         - event: LogAddMarket(uint256,address)
           handler: handleAddMarket
         - event: LogIndexUpdate(indexed uint256,(uint96,uint96,uint32))
           handler: handleIndexUpdate
+        - event: LogBuy(indexed address,uint256,uint256,uint256,((bool,uint256),(bool,uint128)),((bool,uint256),(bool,uint128)),address)
+          handler: handleBuy
+        - event: LogSell(indexed address,uint256,uint256,uint256,((bool,uint256),(bool,uint128)),((bool,uint256),(bool,uint128)),address)
+          handler: handleSell
+        - event: LogLiquidate(indexed address,uint256,indexed address,uint256,uint256,uint256,((bool,uint256),(bool,uint128)),((bool,uint256),(bool,uint128)),((bool,uint256),(bool,uint128)),((bool,uint256),(bool,uint128)))
+          handler: handleLiquidate
+  - name: Expiry
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: Expiry
+      address: '0x0ece224fbc24d40b446c6a94a142dc41fae76f2d'
+      startBlock: 7575714
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/protocol/margin.ts
+      abis:
+        - name: Expiry
+          file: ./abis/Expiry.json
+      entities:
+        - LongPosition
+        - ShortPosition
+      eventHandlers:
+        - event: ExpirySet(address,uint256,uint256,uint32)
+          handler: handleExpiration
   - name: SaiPriceOracle
     kind: ethereum/contract
     network: mainnet
@@ -43,8 +74,8 @@ dataSources:
         - name: DaiPriceOracle
           file: ./abis/DaiPriceOracle.json
       entities:
-        - PriceLog
         - Token
+        - TokenPrice
       eventHandlers:
         - event: PriceSet((uint128,uint32))
           handler: handlePriceSet
@@ -64,8 +95,8 @@ dataSources:
         - name: DaiPriceOracle
           file: ./abis/DaiPriceOracle.json
       entities:
-        - PriceLog
         - Token
+        - TokenPrice
       eventHandlers:
         - event: PriceSet((uint128,uint32))
           handler: handlePriceSet

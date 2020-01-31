@@ -2,7 +2,7 @@ import { DaiPriceOracle, PriceSet } from '../../generated/SaiPriceOracle/DaiPric
 
 import { Token, TokenPrice } from '../../generated/schema'
 
-import { toDecimal } from '../utils/numeric'
+import { toDecimal } from '../utils/decimal'
 
 export function handlePriceSet(event: PriceSet): void {
   let oracle = DaiPriceOracle.bind(event.address)

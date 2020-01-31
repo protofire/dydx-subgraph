@@ -54,10 +54,10 @@ type Token @entity {
   decimals: Int!
 
   " Human-readable name of the token "
-  name: String
+  name: String!
 
   " Symbol of the token "
-  symbol: String
+  symbol: String!
 
   " Associated market "
   market: Market!
@@ -81,4 +81,99 @@ type TokenPrice @entity {
 
   " Block number "
   block: BigInt!
+}
+
+enum PositionStatus {
+  Open
+  Closed
+  Expired
+  Liquidated
+}
+
+type LongPosition @entity {
+  " Equals to: <accountOwner>-<accountNumber>-<takerMarket> "
+  id: ID!
+
+  " Position owner's address "
+  accountOwner: Bytes!
+
+  " Position account number "
+  accountNumber: BigInt!
+
+  " Current position amount "
+  amount: BigInt!
+
+  " Market maker reference  "
+  makerMarket: Market
+
+  " Market taker reference "
+  takerMarket: Market
+
+  " String representation of position market "
+  market: String
+
+  " Contract address for the dYdX exchange wrapper "
+  exchangeWrapper: Bytes!
+
+  " Initial deposit amount "
+  marginDeposit: BigInt!
+
+  " Initial leverage "
+  leverage: BigDecimal
+
+  " Price the position opened at "
+  openPrice: BigDecimal!
+
+  " Position status "
+  status: PositionStatus!
+
+  " Timestamp when the position was opened "
+  created: BigInt!
+
+  " Timestamp the position expires "
+  expiration: BigInt
+}
+
+type ShortPosition @entity {
+  " Equals to: <accountOwner>-<accountNumber>-<takerMarket> "
+  id: ID!
+
+  "Position owner's address"
+  accountOwner: Bytes!
+
+  "Position account number"
+  accountNumber: BigInt!
+
+  " Current position amount "
+  amount: BigInt!
+
+  " Market maker reference "
+  makerMarket: Market
+
+  " Market taker reference "
+  takerMarket: Market
+
+  " String representation of position market "
+  market: String
+
+  " Contract address for the dYdX exchange wrapper "
+  exchangeWrapper: Bytes!
+
+  " Initial deposit amount "
+  marginDeposit: BigInt!
+
+  " Initial leverage "
+  leverage: BigDecimal
+
+  " Price the position opened at "
+  openPrice: BigDecimal!
+
+  " Position status "
+  status: PositionStatus!
+
+  " Time the position was opened "
+  created: BigInt!
+
+  " Timestamp the position expires "
+  expiration: BigInt
 }
