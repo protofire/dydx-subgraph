@@ -16,8 +16,11 @@ import { ERC20 } from '../../generated/Margin/ERC20'
 import { Market, MarketState, Token, TokenPrice, LongPosition, ShortPosition } from '../../generated/schema'
 
 import { pow, toDecimal, DEFAULT_DECIMALS } from '../utils/decimal'
+import { BigInt, BigDecimal } from '@graphprotocol/graph-ts'
 
 const NETWORK_EARNINGS_RATE = 0.95 // TODO: Get this value from the SoloMargin contract
+let BIGINT_ZERO = BigInt.fromI32(0);
+let BIGDECIMAL_ZERO = BIGINT_ZERO.toBigDecimal();
 
 export function handleAddMarket(event: LogAddMarket): void {
   let token = registerToken(event.params.token)
@@ -125,6 +128,8 @@ export function handleBuy(event: LogBuy): void {
   let takerMarket = Market.load(event.params.takerMarket.toString())
   let takerUpdate = event.params.takerUpdate
 
+  let makerNewParMinusDeltaWei = makerUpdate.newPar.value.toBigDecimal().minus(makerUpdate.deltaWei.value.toBigDecimal());
+
   if (makerUpdate.deltaWei.sign && makerUpdate.newPar.sign) {
     let position = new LongPosition(accountId + '-' + event.params.takerMarket.toString())
     position.status = 'Open'
@@ -136,10 +141,14 @@ export function handleBuy(event: LogBuy): void {
     position.market = event.params.takerMarket.toString() + '-' + event.params.makerMarket.toString()
     position.exchangeWrapper = event.params.exchangeWrapper
     position.marginDeposit = makerUpdate.newPar.value.minus(makerUpdate.deltaWei.value)
-    position.openPrice = takerUpdate.deltaWei.value.divDecimal(makerUpdate.deltaWei.value.toBigDecimal())
-    position.leverage = makerUpdate.newPar.value.divDecimal(
-      makerUpdate.newPar.value.toBigDecimal().minus(makerUpdate.deltaWei.value.toBigDecimal()),
-    )
+    position.openPrice =
+      makerUpdate.deltaWei.value == BIGINT_ZERO
+        ? BIGDECIMAL_ZERO
+        : takerUpdate.deltaWei.value.divDecimal(makerUpdate.deltaWei.value.toBigDecimal())
+    position.leverage =
+      makerNewParMinusDeltaWei == BIGDECIMAL_ZERO
+        ? null
+        : makerUpdate.newPar.value.divDecimal(makerNewParMinusDeltaWei)
     position.created = event.block.timestamp
 
     position.save()
@@ -181,6 +190,8 @@ export function handleSell(event: LogSell): void {
   let takerMarket = Market.load(event.params.takerMarket.toString())
   let takerUpdate = event.params.takerUpdate
 
+  let makerNewParMinusDeltaWei = makerUpdate.newPar.value.toBigDecimal().minus(makerUpdate.deltaWei.value.toBigDecimal())
+
   if (!takerUpdate.deltaWei.sign && !takerUpdate.newPar.sign) {
     let position = new ShortPosition(accountId + '-' + event.params.takerMarket.toString())
     position.status = 'Open'
@@ -192,10 +203,14 @@ export function handleSell(event: LogSell): void {
     position.market = event.params.takerMarket.toString() + '-' + event.params.makerMarket.toString()
     position.exchangeWrapper = event.params.exchangeWrapper
     position.marginDeposit = makerUpdate.newPar.value.minus(makerUpdate.deltaWei.value)
-    position.openPrice = makerUpdate.deltaWei.value.divDecimal(takerUpdate.deltaWei.value.toBigDecimal())
-    position.leverage = makerUpdate.deltaWei.value.divDecimal(
-      makerUpdate.newPar.value.toBigDecimal().minus(makerUpdate.deltaWei.value.toBigDecimal()),
-    )
+    position.openPrice =
+      takerUpdate.deltaWei.value == BIGINT_ZERO
+        ? BIGDECIMAL_ZERO
+        : makerUpdate.deltaWei.value.divDecimal(takerUpdate.deltaWei.value.toBigDecimal());
+    position.leverage =
+      makerNewParMinusDeltaWei == BIGDECIMAL_ZERO
+        ? null
+        : makerUpdate.deltaWei.value.divDecimal(makerNewParMinusDeltaWei)
     position.created = event.block.timestamp
 
     position.save()
