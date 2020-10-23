@@ -11,7 +11,7 @@ dataSources:
       startBlock: 7575711
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.3
+      apiVersion: 0.0.4
       language: wasm/assemblyscript
       file: ./src/protocol/margin.ts
       abis:
@@ -46,7 +46,7 @@ dataSources:
       startBlock: 7575714
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.3
+      apiVersion: 0.0.4
       language: wasm/assemblyscript
       file: ./src/protocol/margin.ts
       abis:
@@ -67,7 +67,7 @@ dataSources:
       startBlock: 7575713
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.3
+      apiVersion: 0.0.4
       language: wasm/assemblyscript
       file: ./src/oracles/sai-price.ts
       abis:
@@ -88,7 +88,7 @@ dataSources:
       startBlock: 8977334
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.3
+      apiVersion: 0.0.4
       language: wasm/assemblyscript
       file: ./src/oracles/dai-price.ts
       abis:
